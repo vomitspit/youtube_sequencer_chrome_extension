@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "yt sequencer",
+  "description": "creates configurable bpm-locked loops for youtube videos",
+  "version": "1.0",
+  "permissions": ["storage", "tabs", "scripting"],
+  "host_permissions": [
+    "https://*.youtube.com/*"
+  ],
+  "icons": {
+    "16": "icons/ytsequencer16.png",
+    "32": "icons/ytsequencer32.png",
+    "48": "icons/ytsequencer48.png",
+    "128": "icons/ytsequencer128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "yt sequencer",
+    "default_icon": {
+      "16": "icons/ytsequencer16.png",
+      "32": "icons/ytsequencer32.png"
+    }
+  },
+  "commands": {
+    "start-loop": {
+      "suggested_key": {
+        "default": "Alt+Shift+S"
+      },
+      "description": "Start BPM loop"
+    },
+    "stop-loop": {
+      "suggested_key": {
+        "default": "Alt+Shift+X"
+      },
+      "description": "Stop BPM loop"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}

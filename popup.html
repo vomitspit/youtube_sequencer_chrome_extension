@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>YouTube BPM Looper</title>
+<style>
+:root {
+  --bg: #000;
+  --fg: #fff;
+  --border: #fff;
+  --hover: #111;
+}
+
+body {
+  font-family: "Courier New", monospace;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--fg);
+  width: 402px;
+  padding: 16px;
+  border: 2px solid transparent;
+  box-sizing: border-box;
+}
+
+/* Active pulse */
+body.loop-active {
+  animation: borderPulse 1.4s infinite ease-in-out;
+}
+
+@keyframes borderPulse {
+  0%   { border-color: rgba(255,255,255,0.25); }
+  50%  { border-color: rgba(255,255,255,1); }
+  100% { border-color: rgba(255,255,255,0.25); }
+}
+
+.section {
+  margin-bottom: 14px;
+}
+
+.section-title {
+  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+}
+
+/* ---------- Unified layout system ---------- */
+
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* input + right-side label */
+.field-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.field-inline input {
+  width: 60px;
+}
+
+.field-button {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 9px;
+}
+
+/* ---------- Inputs ---------- */
+
+input[type="number"] {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 3px;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  outline: none;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  opacity: 1;
+  filter: invert(1);
+}
+
+/* ---------- Buttons ---------- */
+
+button {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 4px 26px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--hover);
+}
+
+/* Start/Stop row */
+.button-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.button-row button {
+  flex: 1;
+}
+
+/* Divider */
+hr {
+  border: none;
+  border-top: 1px dashed var(--border);
+  margin: 12px 0;
+}
+</style>
+</head>
+
+<body>
+
+<!-- -------- START TIME ROW -------- -->
+<div class="section">
+  <div class="section-title">Loop Start Time</div>
+
+  <div class="input-row">
+
+    <div class="field-inline">
+      <input type="number" id="startMin" min="0" value="0">
+      <span>min</span>
+    </div>
+
+    <div class="field-inline">
+      <input type="number" id="startSec" min="0" max="59" value="0">
+      <span>sec</span>
+    </div>
+
+    <div class="field-button">
+      <button id="useCurrentTime">CURRENT TIME</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- -------- LOOP GRID ROW -------- -->
+<div class="section">
+  <div class="section-title">Loop Grid</div>
+
+  <div class="input-row">
+
+    <div class="field-inline">
+      <input type="number" id="restartAfter" value="2" min="1" step="1">
+      <span>bars</span>
+    </div>
+
+    <div class="field-inline">
+      <input type="number" id="bpm" value="120" min="20" max="400" step="1">
+      <span>bpm</span>
+    </div>
+
+    <div class="field-inline">
+      <input type="number" id="playDuration" min="1" value="4">
+      <span>sustain</span>
+    </div>
+
+  </div>
+</div>
+
+<hr>
+
+<!-- -------- START / STOP -------- -->
+<div class="button-row">
+  <button id="startLoop">START</button>
+  <button id="stopLoop">STOP</button>
+</div>
+
+<!-- -------- SAVE/LOAD POPUP -------- -->
+<div class="section" style="margin-top:12px;">
+  <div class="input-row" style="justify-content: flex-end; cursor: pointer;" id="togglePresets">
+    <span id="presetArrow" style="user-select:none;">Save/Load ▼</span>
+  </div>
+
+  <!-- Hidden presets panel -->
+  <div id="presetPanel" style="display:none; margin-top:8px;">
+    <div class="input-row">
+      <div class="field-inline" style="flex:1;">
+        <input type="text" id="presetName" placeholder="Preset name" style="width:100%;">
+      </div>
+      <div class="field-button">
+        <button id="savePreset">SAVE</button>
+      </div>
+    </div>
+
+    <select id="presetList" style="width:100%; margin-top:8px; background:#000; color:#fff; border:1px solid #fff;"></select>
+
+    <div class="button-row" style="margin-top:8px;">
+      <button id="loadPreset">LOAD</button>
+      <button id="deletePreset">DELETE</button>
+    </div>
+  </div>
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>
