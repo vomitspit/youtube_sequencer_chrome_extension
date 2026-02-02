@@ -2,6 +2,7 @@ let loopRunning = false;
 let audioCtx = null;
 let loopStartTime = 0;
 let anchorTime = 0;
+let lastBarIndex = -1;
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "startLoop") {
@@ -38,6 +39,18 @@ function startBpmLoop(loopStart, playDuration, bpm, bars) {
     const elapsedMs = performance.now() - anchorTime;
     const elapsed = elapsedMs / 1000;
     const position = elapsed % loopDuration;
+    const barLength = loopDuration / bars;
+    const barIndex = Math.floor(position / barLength);
+
+    if (barIndex !== lastBarIndex) {
+      lastBarIndex = barIndex;
+
+      chrome.runtime.sendMessage({
+        action: "barTick",
+        bar: barIndex + 1, // 1-based for UI
+        bars
+      });
+    }
 
     if (gridLocked) {
       const tolerance = 0.05;

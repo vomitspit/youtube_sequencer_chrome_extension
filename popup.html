@@ -22,15 +22,20 @@ body {
   box-sizing: border-box;
 }
 
-/* Active pulse */
-body.loop-active {
-  animation: borderPulse 1.4s infinite ease-in-out;
+.bar-flash {
+  animation: barFlash 1200ms ease-in-out;
 }
 
-@keyframes borderPulse {
-  0%   { border-color: rgba(255,255,255,0.25); }
-  50%  { border-color: rgba(255,255,255,1); }
-  100% { border-color: rgba(255,255,255,0.25); }
+@keyframes barFlash {
+  from {
+    outline: 0 solid rgba(255, 255, 255, 0);
+  }
+  50% {
+    outline: 3px solid rgba(255, 255, 255, 0.5);
+  }
+  to {
+    outline: 0 solid rgba(255, 255, 255, 0);
+  }
 }
 
 .section {
@@ -39,6 +44,11 @@ body.loop-active {
 
 .section-title {
   margin-bottom: 6px;
+  letter-spacing: 0.05em;
+}
+
+.bar-counter {
+  margin-top: 6px;
   letter-spacing: 0.05em;
 }
 
@@ -178,27 +188,27 @@ hr {
   <button id="startLoop">START</button>
   <button id="stopLoop">STOP</button>
 </div>
+<div id="barCounter" class="bar-counter"></div>
 
 <!-- -------- SAVE/LOAD POPUP -------- -->
-<div class="section" style="margin-top:12px;">
-  <div class="input-row" style="justify-content: flex-end; cursor: pointer;" id="togglePresets">
-    <span id="presetArrow" style="user-select:none;">Save/Load ▼</span>
+<div style="margin-top: 12px;">
+  <div class="input-row" style="justify-content: flex-end; cursor: pointer; opacity: 0.8;" id="togglePresets">
+    <span id="presetArrow" style="user-select:none; font-size: 12px;">Save/Load ▼</span>
   </div>
 
-  <!-- Hidden presets panel -->
-  <div id="presetPanel" style="display:none; margin-top:8px;">
+  <div id="presetPanel" style="display: none; margin-top: 12px; padding-bottom: 4px;">
     <div class="input-row">
-      <div class="field-inline" style="flex:1;">
-        <input type="text" id="presetName" placeholder="Preset name" style="width:100%;">
+      <div class="field-inline" style="flex: 1;">
+        <input type="text" id="presetName" placeholder="Preset name" style="width: 100%; box-sizing: border-box;">
       </div>
       <div class="field-button">
-        <button id="savePreset">SAVE</button>
+        <button id="savePreset" style="padding: 4px 12px;">SAVE</button>
       </div>
     </div>
 
-    <select id="presetList" style="width:100%; margin-top:8px; background:#000; color:#fff; border:1px solid #fff;"></select>
+    <select id="presetList" style="width: 100%; margin-top: 8px; background: #000; color: #fff; border: 1px solid #fff; font-family: inherit; padding: 2px;"></select>
 
-    <div class="button-row" style="margin-top:8px;">
+    <div class="button-row" style="margin-top: 8px;">
       <button id="loadPreset">LOAD</button>
       <button id="deletePreset">DELETE</button>
     </div>
