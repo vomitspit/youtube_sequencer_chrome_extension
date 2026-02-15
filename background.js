@@ -24,3 +24,16 @@ chrome.commands.onCommand.addListener(async (command) => {
     chrome.tabs.sendMessage(tab.id, { action: "stopLoop" });
   }
 });
+
+chrome.runtime.onMessage.addListener((msg, sender) => {
+  if (msg.action !== "barTick") return;
+
+  const tabId = sender.tab?.id;
+  if (!tabId) return;
+
+  // forward message with tabId attached
+  chrome.runtime.sendMessage({
+    ...msg,
+    tabId
+  });
+});

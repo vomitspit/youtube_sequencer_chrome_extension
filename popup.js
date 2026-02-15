@@ -2,13 +2,20 @@
 // BASIC HELPERS
 // =========================
 
+let popupTabId = null;
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  popupTabId = tab?.id || null;
+});
+
 // Extract YouTube video ID (presets only)
 function getVideoId(url) {
   const match = url.match(/[?&]v=([^&#]*)/);
   return match ? match[1] : null;
 }
 
-// Minutes + seconds → total seconds
+// Minutes + seconds → total seconds (preserving decimals)
 function getTotalSeconds(minInput, secInput) {
   return (Number(minInput.value) || 0) * 60 + (Number(secInput.value) || 0);
 }
@@ -49,7 +56,8 @@ function readCurrentState() {
     ),
     playDuration: Number(document.getElementById("playDuration").value) || 2,
     bpm: Number(document.getElementById("bpm").value) || 120,
-    bars: Number(document.getElementById("restartAfter").value) || 2
+    bars: Number(document.getElementById("restartAfter").value) || 2,
+    randomize: document.getElementById("randomize").checked
   };
 }
 
@@ -57,10 +65,11 @@ function applyState(state) {
   if (!state) return;
 
   document.getElementById("startMin").value = Math.floor(state.start / 60);
-  document.getElementById("startSec").value = Math.floor(state.start % 60);
+  document.getElementById("startSec").value = state.start % 60;
   document.getElementById("playDuration").value = state.playDuration;
   document.getElementById("bpm").value = state.bpm;
   document.getElementById("restartAfter").value = state.bars;
+  document.getElementById("randomize").checked = state.randomize || false;
 }
 
 async function persistUiState() {
@@ -128,10 +137,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   await refreshPresetList();
 
   // Persist UI changes automatically
-  ["startMin", "startSec", "playDuration", "bpm", "restartAfter"]
+  ["startMin", "startSec", "playDuration", "bpm", "restartAfter", "randomize"]
     .forEach(id => {
-      document.getElementById(id)
-        .addEventListener("change", persistUiState);
+      const element = document.getElementById(id);
+      if (element.type === 'checkbox') {
+        element.addEventListener("change", persistUiState);
+      } else {
+        element.addEventListener("change", persistUiState);
+      }
     });
 });
 
@@ -158,7 +171,9 @@ document.getElementById("useCurrentTime").addEventListener("click", async () => 
 
   const t = match.result;
   document.getElementById("startMin").value = Math.floor(t / 60);
-  document.getElementById("startSec").value = Math.floor(t % 60);
+  // Round to 2 decimal places
+  const seconds = t % 60;
+  document.getElementById("startSec").value = Math.round(seconds * 100) / 100;
 
   persistUiState();
 });
@@ -192,7 +207,7 @@ document.getElementById("stopLoop").addEventListener("click", async () => {
 // =========================
 
 chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.action !== "barTick") return;
+  if (msg.action !== "barTick" || msg.tabId !== popupTabId) return;
 
   // Update bar counter
   const counter = document.getElementById("barCounter");
@@ -203,7 +218,7 @@ chrome.runtime.onMessage.addListener((msg) => {
   // Flash once per bar
   const body = document.body;
   body.classList.remove("bar-flash");
-  void body.offsetWidth; // force reflow so animation retriggers
+  void body.offsetWidth;
   body.classList.add("bar-flash");
 });
 
@@ -265,7 +280,7 @@ document.getElementById("togglePresets").addEventListener("click", () => {
 });
 
 // =========================
-// HOTKEYS (POPUP OPEN)
+// HOTKEYS (POPUP OPEN) - Ctrl+Shift combo to avoid text input interference
 // =========================
 
 document.addEventListener("keydown", (e) => {
@@ -275,15 +290,22 @@ document.addEventListener("keydown", (e) => {
 
   let changed = false;
 
-  if (e.code === "KeyS") {
+  // Ctrl+Shift+S for Start
+  if (e.ctrlKey && e.shiftKey && e.code === "KeyS") {
     e.preventDefault();
     document.getElementById("startLoop").click();
     return;
   }
 
-  if (e.code === "KeyX") {
+  // Ctrl+Shift+X for Stop
+  if (e.ctrlKey && e.shiftKey && e.code === "KeyX") {
     e.preventDefault();
     document.getElementById("stopLoop").click();
+    return;
+  }
+
+  // Don't interfere with text inputs
+  if (document.activeElement.tagName === 'INPUT' && document.activeElement.type === 'text') {
     return;
   }
 

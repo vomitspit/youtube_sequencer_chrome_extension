@@ -67,7 +67,7 @@ body {
   gap: 6px;
 }
 
-.field-inline input {
+.field-inline input[type="number"] {
   width: 60px;
 }
 
@@ -76,6 +76,20 @@ body {
   flex-direction: column;
   gap: 4px;
   font-size: 9px;
+}
+
+/* ---------- Checkbox ---------- */
+
+.field-checkbox {
+  display: flex;
+  align-items: center;
+}
+
+.field-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--fg);
 }
 
 /* ---------- Inputs ---------- */
@@ -146,12 +160,17 @@ hr {
     </div>
 
     <div class="field-inline">
-      <input type="number" id="startSec" min="0" max="59" value="0">
+      <input type="number" id="startSec" min="0" value="0">
       <span>sec</span>
     </div>
 
     <div class="field-button">
-      <button id="useCurrentTime">CURRENT TIME</button>
+      <button id="useCurrentTime">NOW</button>
+    </div>
+
+    <div class="field-checkbox">
+      <input type="checkbox" id="randomize">
+      <span>rand</span>
     </div>
 
   </div>
@@ -189,6 +208,7 @@ hr {
   <button id="stopLoop">STOP</button>
 </div>
 <div id="barCounter" class="bar-counter"></div>
+<div style="font-size: 11px; margin-top: 4px; opacity: 0.7;">Hotkeys: Ctrl+Shift+S (start) / Ctrl+Shift+X (stop)</div>
 
 <!-- -------- SAVE/LOAD POPUP -------- -->
 <div style="margin-top: 12px;">

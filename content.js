@@ -3,23 +3,41 @@ let audioCtx = null;
 let loopStartTime = 0;
 let anchorTime = 0;
 let lastBarIndex = -1;
+let videoDuration = 0;
+let loopConfig = null;
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "startLoop") {
-    const { start, playDuration, bpm, bars } = message.config;
-    startBpmLoop(start, playDuration, bpm, bars);
+    const { start, playDuration, bpm, bars, randomize } = message.config;
+    startBpmLoop(start, playDuration, bpm, bars, randomize);
   } else if (message.action === "stopLoop") {
     stopBpmLoop();
-
   }
 });
 
-function startBpmLoop(loopStart, playDuration, bpm, bars) {
+function startBpmLoop(loopStart, playDuration, bpm, bars, randomize) {
   const video = document.querySelector('video');
   if (!video) return;
 
   stopBpmLoop(); // clear any existing loop
 
+  // Store config for randomization
+  loopConfig = {
+    loopStart,
+    playDuration,
+    bpm,
+    bars,
+    randomize
+  };
+
+  // Get video duration for randomization bounds
+  videoDuration = video.duration;
+
+  // Disable autoplay to prevent YouTube from auto-advancing
+  const autoplayButton = document.querySelector('.ytp-button[data-tooltip-target-id="ytp-autonav-toggle-button"]');
+  if (autoplayButton && autoplayButton.getAttribute('aria-checked') === 'true') {
+    autoplayButton.click();
+  }
 
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   loopStartTime = audioCtx.currentTime;
@@ -32,6 +50,9 @@ function startBpmLoop(loopStart, playDuration, bpm, bars) {
 
   const actualPlayDuration = playDuration;
   const gridLocked = playDuration >= loopDuration;
+
+  // Track the current random start time (only changes at loop boundary)
+  let currentStartTime = randomize ? getRandomStartTime() : loopStart;
 
   function tick() {
     if (!loopRunning) return;
@@ -55,20 +76,28 @@ function startBpmLoop(loopStart, playDuration, bpm, bars) {
     if (gridLocked) {
       const tolerance = 0.05;
       if (position < tolerance) {
-        video.currentTime = loopStart;
+        // Pick new random start time only at loop boundary
+        if (loopConfig.randomize) {
+          currentStartTime = getRandomStartTime();
+        }
+        video.currentTime = currentStartTime;
         video.play();
       }
     } else {
       if (position < actualPlayDuration) {
         if (video.paused) {
-          video.currentTime = loopStart;
+          // Pick new random start time only when starting a new loop
+          if (loopConfig.randomize) {
+            currentStartTime = getRandomStartTime();
+          }
+          video.currentTime = currentStartTime;
           video.play();
         }
       } else {
         if (!video.paused) {
           video.pause();
         }
-        video.currentTime = loopStart;
+        video.currentTime = currentStartTime;
       }
     }
 
@@ -76,6 +105,26 @@ function startBpmLoop(loopStart, playDuration, bpm, bars) {
   }
 
   tick();
+}
+
+function getRandomStartTime() {
+  if (!videoDuration || videoDuration <= loopConfig.playDuration) {
+    return loopConfig.loopStart;
+  }
+  
+  // Calculate safe upper bound (leave sustain duration at the end to avoid autoplay trigger)
+  const beatsPerBar = 4;
+  const secondsPerBeat = 60 / loopConfig.bpm;
+  const loopDuration = loopConfig.bars * beatsPerBar * secondsPerBeat;
+  
+  // Use the actual play duration (sustain) as the safety buffer
+  const actualPlayDuration = Math.min(loopConfig.playDuration, loopDuration);
+  const safeEndTime = Math.max(0, videoDuration - actualPlayDuration);
+  
+  // Random time between 0 and safe end time
+  const randomTime = Math.random() * safeEndTime;
+  
+  return randomTime;
 }
 
 function stopBpmLoop() {
@@ -86,4 +135,6 @@ function stopBpmLoop() {
   }
   const video = document.querySelector('video');
   if (video) video.pause();
+  
+  loopConfig = null;
 }
